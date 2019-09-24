@@ -119,20 +119,34 @@ DWINDOWLENGTH = 2^17; % 131072 samples
 % Add location and window count fields
 fH.loc          = 0;  % Uninitialised data buffer
 fH.windowLength = DWINDOWLENGTH;
-  
-% read the first sample of data and find the sample rate / wordsize and
-% file comment.wavread for the sample rate, bitsPerSample, info
-[Y, sampleRate] = audioread(fH.name);
-yinfo = audioinfo(fH.name)
 
-% The memory for the data will never be declared by readData as
-% such.  The call to wavread creates it and transfers ownership
-% upon assignment.
-fH.data          = []; % no data as yet
+if exist('audioread')
+  % read the first sample of data and find the sample rate / wordsize and
+  % file comment.wavread for the sample rate, bitsPerSample, info
+  [Y, sampleRate] = audioread(fH.name);
+  yinfo = audioinfo(fH.name)
+
+  % The memory for the data will never be declared by readData as
+  % such.  The call to wavread creates it and transfers ownership
+  % upon assignment.
+  fH.data          = []; % no data as yet
+  fH.bitsPerSample = yinfo.BitsPerSample
+  fH.samples       = yinfo.TotalSamples;
+  fH.channels      = yinfo.NumChannels;
+else
+  % work out the size and channel count
+  temp = wavread(fH.name, 'size');
+
+  % This is by convention - see help wavread
+  fH.samples  = temp(1);
+  fH.channels = temp(2);
+  % read the first sample of data and find the sample rate / wordsize and
+  % file comment.wavread for the sample rate, bitsPerSample, info
+  [Y, sampleRate, bitsPerSample, OPTS] = wavread(fH.name, 1);
+  fH.bitsPerSample = bitsPerSample
+end
+
 fH.sampleRate    = sampleRate;
-fH.bitsPerSample = yinfo.BitsPerSample
-fH.samples       = yinfo.TotalSamples;
-fH.channels      = yinfo.NumChannels;
  
 if exist('OPTS.info', 'var')
   fH.info = OPTS.info;
@@ -238,10 +252,15 @@ fH.winDataEnd = fH.windowLength - pad;
 % [fH.loc fH.startIndex endIndex fH.winDataStart fH.winDataEnd]
 
 % Read data from file, padding as neccessary
-fH.data = [padInFront; ... 
-           audioread(fH.name, [startIndex endIndex]); ...
-           padAtRear];
-
+if exist('audioread')
+  fH.data = [padInFront; ... 
+            audioread(fH.name, [startIndex endIndex]); ...
+            padAtRear];
+else
+  fH.data = [padInFront; ... 
+             wavread(fH.name, [startIndex endIndex]); ...
+             padAtRear];
+end
 % Consistecy checking - startIndex must always be inside the
 %                       input data
 if startIndex > fH.samples
