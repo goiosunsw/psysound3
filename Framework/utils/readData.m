@@ -120,24 +120,20 @@ DWINDOWLENGTH = 2^17; % 131072 samples
 fH.loc          = 0;  % Uninitialised data buffer
 fH.windowLength = DWINDOWLENGTH;
   
-% work out the size and channel count
-temp = wavread(fH.name, 'size');
-
-% This is by convention - see help wavread
-fH.samples  = temp(1);
-fH.channels = temp(2);
-  
 % read the first sample of data and find the sample rate / wordsize and
 % file comment.wavread for the sample rate, bitsPerSample, info
-[Y, sampleRate, bitsPerSample, OPTS] = wavread(fH.name, 1);
+[Y, sampleRate] = audioread(fH.name);
+yinfo = audioinfo(fH.name)
 
 % The memory for the data will never be declared by readData as
 % such.  The call to wavread creates it and transfers ownership
 % upon assignment.
 fH.data          = []; % no data as yet
 fH.sampleRate    = sampleRate;
-fH.bitsPerSample = bitsPerSample;
-  
+fH.bitsPerSample = yinfo.BitsPerSample
+fH.samples       = yinfo.TotalSamples;
+fH.channels      = yinfo.NumChannels;
+ 
 if exist('OPTS.info', 'var')
   fH.info = OPTS.info;
 else
@@ -243,7 +239,7 @@ fH.winDataEnd = fH.windowLength - pad;
 
 % Read data from file, padding as neccessary
 fH.data = [padInFront; ... 
-           wavread(fH.name, [startIndex endIndex]); ...
+           audioread(fH.name, [startIndex endIndex]); ...
            padAtRear];
 
 % Consistecy checking - startIndex must always be inside the
