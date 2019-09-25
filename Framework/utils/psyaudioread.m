@@ -1,9 +1,10 @@
-[y, fs, bits, other_info] = psyaudioread(fname, samples)
-% [Y, FS, BITS, OTHER_INF] = PSYAUDIOREAD(FILENAME, SAMPLES)
+function [y, fs, bits, other_info] = psyaudioread(fname, samples)
+% PSYAUDIOREAD interface to matlab's audioreaders
+%   [Y, FS, BITS, OTHER_INF] = PSYAUDIOREAD(FILENAME, SAMPLES)
 %
-% Interface function to obsolete WAVREAD or to AUDIOREAD in 
-% newer versions of matlab. Should be used throughout psysound
-% instead of wavread.
+%   Interface function to obsolete WAVREAD or to AUDIOREAD in 
+%   newer versions of matlab. Should be used throughout psysound
+%   instead of wavread.
 
 yinfo = [];
 
